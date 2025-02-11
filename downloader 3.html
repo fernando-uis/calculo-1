@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulación de Descarga</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+        .progress-bar {
+            width: 80%;
+            background-color: #f3f3f3;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            margin: 20px auto;
+            height: 30px;
+            overflow: hidden;
+            position: relative;
+        }
+        .progress-bar-inner {
+            height: 100%;
+            background-color: #4caf50;
+            width: 0;
+            transition: width 0.1s linear;
+        }
+        .info {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <h1>Simulación de Descarga</h1>
+    <div class="progress-bar">
+        <div class="progress-bar-inner" id="progress-bar-inner"></div>
+    </div>
+    <div class="info">
+        <p><strong>Porcentaje descargado:</strong> <span id="percentage">0</span>%</p>
+        <p><strong>Tamaño descargado:</strong> <span id="downloaded">0</span> MB / 500 MB</p>
+        <p><strong>Tiempo transcurrido:</strong> <span id="time">0</span> segundos</p>
+    </div>
+    <button onclick="startDownload()">Iniciar Descarga</button>
+
+    <script>
+        let totalSize = 500; // Tamaño total del archivo en MB
+        let downloaded = 0;
+        let elapsedTime = 0;
+        let downloadSpeed = 1; // Velocidad inicial de descarga en MB/s
+        let maxAcceleration = 0.05; // Máximo factor de variación aleatoria
+        let baseAcceleration = 0.02; // Base de aceleración
+        let interval;
+
+        function updateUI() {
+            const progressBar = document.getElementById("progress-bar-inner");
+            const percentage = Math.min((downloaded / totalSize) * 100, 100).toFixed(1);
+            progressBar.style.width = percentage + "%";
+
+            document.getElementById("percentage").textContent = percentage;
+            document.getElementById("downloaded").textContent = downloaded.toFixed(1);
+
+            // Mostrar el tiempo con máximo 1 o 2 decimales ocasionalmente
+            const timeDisplay = elapsedTime % 1 === 0 ? elapsedTime.toFixed(0) : elapsedTime.toFixed(1);
+            document.getElementById("time").textContent = timeDisplay;
+        }
+
+        function startDownload() {
+            if (interval) {
+                clearInterval(interval);
+            }
+            downloaded = 0;
+            elapsedTime = 0;
+            downloadSpeed = 1; // Reinicia la velocidad de descarga
+            updateUI();
+
+            const totalDuration = 60; // Duración total de la descarga en segundos
+            const updateInterval = 50; // Actualización cada 50 ms
+            const totalSteps = totalDuration * 1000 / updateInterval; // Total de pasos
+            const sizePerStep = totalSize / totalSteps; // Tamaño descargado por paso
+
+            interval = setInterval(() => {
+                if (downloaded < totalSize) {
+                    // Generar una aceleración variable con un componente aleatorio
+                    let randomFactor = (Math.random() * maxAcceleration) - (maxAcceleration / 2);
+                    let acceleration = baseAcceleration + randomFactor;
+                    downloadSpeed += acceleration;
+
+                    // Incrementar el tamaño descargado continuamente
+                    downloaded += sizePerStep;
+
+                    if (downloaded > totalSize) downloaded = totalSize;
+
+                    elapsedTime += updateInterval / 1000; // Convertir ms a s
+                    updateUI();
+                } else {
+                    clearInterval(interval);
+                    alert("Descarga completa!");
+                }
+            }, updateInterval);
+        }
+    </script>
+</body>
+</html>
